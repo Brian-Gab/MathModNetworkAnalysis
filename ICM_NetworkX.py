@@ -58,32 +58,46 @@ def runCascae(filepath, seed_nodes, fixed_probability, max_days=14):
     print("===============================================================")
         
 
-print("Loading Anji's graph...")
-runCascae("Networks/Anji_real.txt", ["anjisalvacion"], 0.004246426309, max_days=14)
-print("")
-print("Loading Maxie's Graph...")
-runCascae("Networks/Maxie_real.txt", ["maxieandreison"], 0.004246426309, max_days=14)
+# print("Loading Anji's graph...")
+# runCascae("Networks/Anji_real.txt", ["anjisalvacion"], 0.009, max_days=14)
+# print("")
+# print("Loading Maxie's Graph...")
+# runCascae("Networks/Maxie_real.txt", ["maxieandreison"], 0.009, max_days=14)
 
-# # Print results
-# print("=================================================================")
-# print("- On Probability:", fixed_probability, " -")
-# print(f"Daily Viewers (Total Seen): {daily_viewers}")
-# print(f"Total Views on Day 14:", sum(daily_viewers))
-# print()
-# print(f"Daily Retweeters (New Retweets): {daily_retweeters}")
-# print(f"Total Retweets on Day 14:", sum(daily_retweeters))
-# print("=================================================================")
+G = nx.DiGraph()
+with open("Networks/Anji_real.txt", "r", encoding="utf-8") as file:
+    for line in file:
+        parts = line.strip().split()
+        if len(parts) == 2:
+            followed, follower = parts[1], parts[0]
+            G.add_edge(follower, followed)  # B → A (follower → followed)
+print(f"Graph loaded with {G.number_of_nodes()} nodes and {G.number_of_edges()} edges.")
 
-# plt.figure(figsize=(10, 6))
-# #plt.plot(range(14), daily_viewers, marker='o', linestyle='-', color='blue', label="Viewers (Seen Tweet)")
-# plt.plot(range(14), daily_retweeters, marker='s', linestyle='--', color='red', label="Retweeters (New RTs)")
+fixed_probability = 0.004
+seed_nodes = ["anjisalvacion"]
+node_probabilities = {node: fixed_probability for node in G.nodes()}
 
-# plt.xlabel("Days")
-# plt.ylabel("Number of People")
-# plt.title("Spread of Tweet Viewers and Retweeters Over 14 Days")
-# plt.legend()
-# plt.grid()
-# plt.show()
+daily_viewers, daily_retweeters, activated_nodes = ICM(G, seed_nodes, node_probabilities, max_days=14)
+# Print results
+print("=================================================================")
+print("- On Probability:", fixed_probability, " -")
+print(f"Daily Viewers (Total Seen): {daily_viewers}")
+print(f"Total Views on Day 14:", sum(daily_viewers))
+print()
+print(f"Daily Retweeters (New Retweets): {daily_retweeters}")
+print(f"Total Retweets on Day 14:", sum(daily_retweeters))
+print("=================================================================")
+
+plt.figure(figsize=(10, 6))
+#plt.plot(range(14), daily_viewers, marker='o', linestyle='-', color='blue', label="Viewers (Seen Tweet)")
+plt.plot(range(14), daily_retweeters, marker='s', linestyle='--', color='red', label="Retweeters (New RTs)")
+
+plt.xlabel("Days")
+plt.ylabel("Number of People")
+plt.title("Spread of Tweet Viewers and Retweeters Over 14 Days")
+plt.legend()
+plt.grid()
+plt.show()
 
 # Visualize the activated subgraph
 # def visualize_activated_subgraph(G_snap, activated_nodes):
