@@ -70,35 +70,25 @@ def getAverageRetweets(filepath, seed_nodes, fixed_probability=fixedProbability,
     return average_retweets, average_viewers, activated_nodes
         
 def getDailyRetweets(filepath, seed_nodes, fixed_probability=fixedProbability, max_days=14, iterations=1000):
-
     G = importGraph(filepath)
     node_probabilities = {node: fixed_probability for node in G.nodes()}
 
-    day1, day2, day3, day4, day5, day6, day7, day8, day9, day10, day11, day12, day13, day14 = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    daily_sums = [0] * max_days
 
-    for j in range(1, iterations+1):
-        daily_viewers, daily_retweeters, activated_nodes = ICM(G, seed_nodes, node_probabilities, max_days=max_days)
-        day1 += daily_retweeters[0]
-        day2 += daily_retweeters[1]
-        day3 += daily_retweeters[2]
-        day4 += daily_retweeters[3]
-        day5 += daily_retweeters[4]
-        day6 += daily_retweeters[5]
-        day7 += daily_retweeters[6]
-        day8 += daily_retweeters[7]
-        day9 += daily_retweeters[8]
-        day10 += daily_retweeters[9]
-        day11 += daily_retweeters[10]
-        day12 += daily_retweeters[11]
-        day13 += daily_retweeters[12]
-        day14 += daily_retweeters[13]
+    for j in range(iterations):
+        _, daily_retweeters, _ = ICM(G, seed_nodes, node_probabilities, max_days=max_days)
+        for day in range(max_days):
+            daily_sums[day] += daily_retweeters[day]
 
-    averageRetweets = [round(day1/iterations, 2), round(day2/iterations, 2), round(day3/iterations, 2), round(day4/iterations, 2), round(day5/iterations, 2), round(day6/iterations, 2), round(day7/iterations, 2), round(day8/iterations, 2), round(day9/iterations, 2), round(day10/iterations, 2), round(day11/iterations, 2), round(day12/iterations, 2), round(day13/iterations, 2), round(day14/iterations, 2)] 
+    average_retweets = [round(total / iterations, 2) for total in daily_sums]
+
     print("===============================================================")
     print("On Probability:", fixed_probability)
-    print(f"Average Retweets: {averageRetweets}")
+    print(f"Average Retweets: {average_retweets}")
     print("===============================================================")
-    return averageRetweets
+
+    return average_retweets
+
 
 def plotGraph(daily_viewers, averageRetweets):
     plt.figure(figsize=(10, 6))
