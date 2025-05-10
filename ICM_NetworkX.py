@@ -102,8 +102,6 @@ def plotGraph(daily_viewers, averageRetweets):
     plt.grid()
     plt.show()
 
-getDailyRetweets(Maxie_filepath, ["maxieandreison"], fixedProbability, 14, 10000)
-
 
 
 
