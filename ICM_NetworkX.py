@@ -5,12 +5,10 @@ from collections import defaultdict, Counter
 from sklearn.metrics import root_mean_squared_error, r2_score, mean_absolute_error
 import numpy as np
 
-fixedProbability = 0.005
-Anji_filepath = "Networks/Anji_real.txt"
-Maxie_filepath = "Networks/Maxie_real.txt"
-Maxie_seed = ["maxieandreison"]
+fixedProbability = 0.005257 #Probability
+Maxie_filepath = "Networks/Maxie_real.txt" #Network
+Maxie_seed = ["maxieandreison"] #Seed
 
-# Import Graph from file
 def importGraph(filepath):
     print(f"Loading graph from {filepath}...")
     G = nx.DiGraph()
@@ -19,12 +17,11 @@ def importGraph(filepath):
             parts = line.strip().split()
             if len(parts) == 2:
                 followed, follower = parts[1], parts[0]
-                G.add_edge(follower, followed)  # B → A (follower → followed)
+                G.add_edge(follower, followed)
     print(f"Graph loaded with {G.number_of_nodes()} nodes and {G.number_of_edges()} edges.")
 
     return G
 
-# Independent Cascade Model using NetworkX
 def ICM(G, seed_nodes, node_probabilities, max_days=14):
     activated_nodes = set(seed_nodes)
     new_active = set(seed_nodes)
@@ -36,7 +33,7 @@ def ICM(G, seed_nodes, node_probabilities, max_days=14):
         viewers_today = set(new_active)
 
         for node in new_active:
-            for neighbor in G.successors(node):  # Out-edges in directed graph
+            for neighbor in G.successors(node):
                 if neighbor not in activated_nodes:
                     viewers_today.add(neighbor)
                     if random.random() < node_probabilities.get(neighbor, 0):
@@ -50,7 +47,6 @@ def ICM(G, seed_nodes, node_probabilities, max_days=14):
 
     return daily_viewers, daily_retweeters, activated_nodes
 
-# Run the cascade
 def getAverageRetweets(filepath, seed_nodes, fixed_probability=fixedProbability, max_days=14, iterations=1000):
     retweets = []
     viewers = []
@@ -66,11 +62,6 @@ def getAverageRetweets(filepath, seed_nodes, fixed_probability=fixedProbability,
     average_retweets = sum(retweets) / len(retweets)
     average_viewers = sum(viewers) / len(viewers)
 
-    print("===============================================================")
-    print("On Probability:", fixed_probability)
-    print("Average Retweets:", average_retweets)
-    print("Average Viewers:", average_viewers)
-    print("===============================================================")
     return average_retweets, average_viewers, activated_nodes
         
 def getDailyRetweets(filepath, seed_nodes, fixed_probability=fixedProbability, max_days=14, iterations=1000):
@@ -88,12 +79,6 @@ def getDailyRetweets(filepath, seed_nodes, fixed_probability=fixedProbability, m
 
     average_retweets = [round(total / iterations, 2) for total in daily_sums]
     average_viewers = [round(total / iterations, 2) for total in daily_views]
-
-    # print("===============================================================")
-    # print("On Probability:", fixed_probability)
-    # print(f"Average Retweets: {average_retweets}")
-    # print(f"Average Viewers: {avergae_viewers}"")
-    # print("===============================================================")
 
     return average_retweets, average_viewers
 
@@ -128,20 +113,9 @@ def getTopActivatedNodes(filepath, seed_nodes, fixed_probability=fixedProbabilit
 
     return top_10, average_retweets
 
-#top_10, average_retweets = getTopActivatedNodes(Maxie_filepath, Maxie_seed, 0.005275, 14, 1000)
+fixedProbability = 0.005257
+average_retweets, average_viewers = getDailyRetweets(Maxie_filepath, Maxie_seed, fixedProbability, 14, 10)
 
-fixedProbability = 0.005275
-average_retweets, average_viewers = getDailyRetweets(Maxie_filepath, Maxie_seed, fixedProbability, 14, 1000)
-
-# print("Top 10 Most Frequently Activated Nodes")
-# for rank, (node, count) in enumerate(top_10, 1):
-#     print(f"{rank}. Node {node}: {count} activations")
-# print("===============================================================")
-
-
-#Le data
-
-#Retweets
 print("Retweets Analysis")
 predicted = average_retweets
 observed =  [1, 370,    10,   1,    2,   1, 0, 1, 0, 0, 0, 0, 0, 0]
@@ -153,39 +127,5 @@ print("===============================================================")
 
 rmse = root_mean_squared_error(observed, predicted)
 r2 = r2_score(observed, predicted)
-mean_observed = np.mean(observed)
-normalized_rmse = rmse/mean_observed
-mae = mean_absolute_error(observed, predicted)
 print(f"RMSE: {rmse:.4f}")
 print(f"R-squared: {r2:.4f}", f", Accuracy: {r2*100:.4f}")
-
-print()
-#Views
-print("Viewers Analysis")
-predicted = average_viewers
-observed =  [1, 58000, 33000, 5000, 5000, 2000, 2000, 2000, 0, 0, 0, 0, 0, 0]
-print("===============================================================")
-print("On Probability:", fixedProbability)
-print(f"Average Viewers: {average_viewers}")
-print(f"Observed Data: {observed}")
-print("===============================================================")
-
-rmse = root_mean_squared_error(observed, predicted)
-r2 = r2_score(observed, predicted)
-mean_observed = np.mean(observed)
-normalized_rmse = rmse/mean_observed
-mae = mean_absolute_error(observed, predicted)
-print(f"RMSE: {rmse:.4f}")
-print(f"R-squared: {r2:.4f}", f", Accuracy: {r2*100:.4f}")
-
-
-
-# Visualize the activated subgraph
-# def visualize_activated_subgraph(G, activated_nodes):
-#     pos = nx.spring_layout(G, seed=42)  # layout for consistent positioning
-
-#     plt.figure(figsize=(10, 7))
-#     nx.draw(G, pos, with_labels=True, node_color='skyblue', edge_color='gray', node_size=500, arrowsize=15)
-#     plt.title("Activated Subgraph after Independent Cascade")
-#     plt.show()
-
